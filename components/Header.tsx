@@ -73,17 +73,13 @@ const Header = ({ onMenuClick }: HeaderProps) => {
       </div>
 
       <div className="shrink-0">
-        {/* <ConnectWallet /> */}
-        <ConnectButton
-          accountStatus={{
-            smallScreen: "avatar",
-            largeScreen: "full",
-          }}
+        <ConnectWallet />
+        {/* <ConnectButton
           chainStatus={{
             smallScreen: "icon",
             largeScreen: "full",
           }}
-        />
+        /> */}
       </div>
     </div>
   );
