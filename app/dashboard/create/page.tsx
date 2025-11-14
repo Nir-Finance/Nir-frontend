@@ -68,10 +68,16 @@ export default function CreateStrategyPage() {
                   <SelectTrigger className="bg-[#EDFCFE0F] w-full text-[#D6D7D7] placeholder:text-[#597778] border border-[#EDFCFE0F] focus:border-[#1FE9F7] focus:outline-none focus:ring-0 px-4 sm:px-5 py-4 sm:py-6">
                     <SelectValue placeholder="Risk Level" />
                   </SelectTrigger>
-                  <SelectContent className="bg-[#EDFCFE0F] text-[#ADBEBF] border-none outline-none focus:outline-none focus:ring-0 focus:border-none">
-                    <SelectItem value="low">Low Risk</SelectItem>
-                    <SelectItem value="medium">Medium Risk</SelectItem>
-                    <SelectItem value="high">High Risk</SelectItem>
+                  <SelectContent className="bg-[#15353add] text-[#ADBEBF] border-none outline-none focus:outline-none focus:ring-0 focus:border-none cursor-pointer">
+                    <SelectItem value="low" className="cursor-pointer">
+                      Low Risk
+                    </SelectItem>
+                    <SelectItem value="medium" className="cursor-pointer">
+                      Medium Risk
+                    </SelectItem>
+                    <SelectItem value="high" className="cursor-pointer">
+                      High Risk
+                    </SelectItem>
                   </SelectContent>
                 </Select>
               </div>

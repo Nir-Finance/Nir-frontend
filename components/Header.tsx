@@ -1,3 +1,5 @@
+"use client";
+
 import React from "react";
 import Image from "next/image";
 import Link from "next/link";
@@ -12,6 +14,8 @@ import {
   SelectValue,
 } from "./ui/select";
 import ConnectWallet from "@/app/components/ConnectWallet";
+import nir_logo from "@/public/nirLogoWhite.png";
+import { ConnectButton } from "@rainbow-me/rainbowkit";
 
 interface HeaderProps {
   onMenuClick?: () => void;
@@ -27,13 +31,16 @@ const Header = ({ onMenuClick }: HeaderProps) => {
         >
           <Menu size={24} />
         </button>
-        <Link href="/" className="cursor-pointer shrink-0">
+        <Link
+          href="/"
+          className="cursor-pointer shrink-0 outline-none border-none focus:outline-none focus:ring-0 focus:border-none"
+        >
           <Image
-            src="/yao_logo_white.svg"
+            src={nir_logo}
             alt="logo"
-            width={46}
-            height={46}
-            className="w-8 h-8 sm:w-[46px] sm:h-[46px]"
+            width={70}
+            height={56}
+            className="w-8 h-8 sm:w-[76px] sm:h-[50px]"
           />
         </Link>
       </div>
@@ -66,7 +73,17 @@ const Header = ({ onMenuClick }: HeaderProps) => {
       </div>
 
       <div className="shrink-0">
-        <ConnectWallet />
+        {/* <ConnectWallet /> */}
+        <ConnectButton
+          accountStatus={{
+            smallScreen: "avatar",
+            largeScreen: "full",
+          }}
+          chainStatus={{
+            smallScreen: "icon",
+            largeScreen: "full",
+          }}
+        />
       </div>
     </div>
   );

@@ -23,6 +23,9 @@ const PRIMARY_ITEMS = [
 const SECONDARY_ITEMS = [
   { label: "Learn", href: "/dashboard/learn", iconSrc: "/icons/learn.svg" },
   { label: "Market", href: "/dashboard/market", iconSrc: "/icons/market.svg" },
+];
+
+const TERTIARY_ITEMS = [
   {
     label: "Settings",
     href: "/dashboard/settings",
@@ -36,9 +39,9 @@ const SECONDARY_ITEMS = [
 ];
 
 const baseLinkClasses =
-  "relative flex items-center gap-3 rounded-full px-4 py-3 text-[15px] font-medium text-[#97A9AA] transition-all duration-150 ease-out hover:text-[#C7F5F8]";
+  "relative flex items-center gap-3 rounded-lg px-4 py-3 text-[15px] font-medium text-white/90 transition-all duration-150 ease-out hover:text-white";
 const activeLinkClasses =
-  "text-[#1FE9F7] shadow-[0_0_0_rgba(0,0,0,0)] [background-image:radial-gradient(120%_120%_at_0%_0%,rgba(31,233,247,0.35),rgba(9,13,16,0)),linear-gradient(180deg,rgba(8,20,24,0.85)_0%,rgba(8,20,24,0.6)_100%)] shadow-[-12px_-8px_32px_rgba(31,233,247,0.18)]";
+  "text-[#1FE9F7] bg-transparent border border-[#1FE9F7]/40 shadow-[0_0_20px_rgba(31,233,247,0.3)]";
 
 interface SidebarProps {
   isOpen?: boolean;
@@ -63,20 +66,29 @@ const Sidebar = ({ isOpen = false, onClose }: SidebarProps) => {
         key={item.href}
         href={item.href}
         onClick={() => onClose?.()}
-        className={clsx(baseLinkClasses, isActive && activeLinkClasses)}
+        className={clsx(
+          baseLinkClasses,
+          isActive && activeLinkClasses,
+          "group"
+        )}
       >
         <Image
           src={item.iconSrc}
           alt={item.label}
-          width={18}
-          height={18}
-          className="h-[18px] w-[18px]"
+          width={20}
+          height={20}
+          className={clsx(
+            "h-5 w-5 transition-opacity",
+            isActive ? "opacity-100 brightness-150" : "opacity-70"
+          )}
           priority={isActive}
         />
-        <span>{item.label}</span>
-        {isActive && (
-          <span className="pointer-events-none absolute inset-[2px] rounded-full border border-[#1FE9F7]/35 opacity-80" />
-        )}
+        <span className="relative">
+          {item.label}
+          {isActive && (
+            <span className="absolute -bottom-1 left-0 right-0 h-[2px] bg-[#1FE9F7] rounded-full" />
+          )}
+        </span>
       </Link>
     );
   };
@@ -94,38 +106,47 @@ const Sidebar = ({ isOpen = false, onClose }: SidebarProps) => {
       {/* Sidebar */}
       <aside
         className={clsx(
-          "fixed lg:sticky top-0 z-50 flex h-screen w-[232px] shrink-0 flex-col gap-7 overflow-y-auto border-r border-[#070B0B]/20 bg-[#090909] px-[18px] py-8 transition-transform duration-300 ease-in-out",
+          "fixed lg:sticky top-0 z-50 flex h-screen w-[232px] shrink-0 flex-col overflow-y-auto bg-black border-r border-[#1a1a1a] px-6 py-6 sm:py-8 transition-transform duration-300 ease-in-out",
           isOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0"
         )}
       >
         {/* Mobile Close Button */}
-        <div className="flex items-center justify-between">
+        <div className="flex items-center justify-between mb-6 lg:hidden">
           <Image
-            src="/yao_logo_white.svg"
+            src="/nirLogoWhite.png"
             alt="logo"
             width={46}
             height={46}
-            className="w-8 h-8 sm:w-[46px] sm:h-[46px] cursor-pointer lg:hidden"
+            className="w-8 h-8 sm:w-[46px] sm:h-[46px] cursor-pointer"
           />
 
           <button
             onClick={onClose}
-            className="mb-4 flex items-center justify-end text-[#97A9AA] hover:text-[#C7F5F8] lg:hidden"
+            className="flex items-center justify-end text-white/70 hover:text-white transition-colors"
           >
             <X size={24} />
           </button>
         </div>
 
-        <nav className="flex flex-col gap-3">
+        {/* Primary Navigation */}
+        <nav className="flex flex-col gap-2 mb-8 text-nowrap">
           {PRIMARY_ITEMS.map(renderLink)}
         </nav>
 
-        <p className="mt-4 text-xs uppercase tracking-[0.16em] text-[#98ADAE8C]">
-          Library
-        </p>
+        {/* Separator */}
+        <div className="h-px bg-white/10 my-2" />
 
-        <nav className="flex flex-col gap-3">
+        {/* Secondary Navigation */}
+        <nav className="flex flex-col gap-2 my-8">
           {SECONDARY_ITEMS.map(renderLink)}
+        </nav>
+
+        {/* Separator */}
+        <div className="h-px bg-white/10 my-2" />
+
+        {/* Tertiary Navigation */}
+        <nav className="flex flex-col gap-2 mt-8">
+          {TERTIARY_ITEMS.map(renderLink)}
         </nav>
       </aside>
     </>
