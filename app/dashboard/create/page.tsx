@@ -96,6 +96,14 @@ export default function CreateStrategyPage() {
 
       if (publicClient) {
         const receipt = await publicClient.waitForTransactionReceipt({ hash });
+        
+        if (receipt.status === "reverted") {
+          toast({
+            description: "Failed to deploy strategy. Check your wallet and try again.",
+            variant: "error",
+          });
+          return;
+        }
 
         let vaultStrategyId: number | null = null;
 
@@ -150,7 +158,7 @@ export default function CreateStrategyPage() {
           router.push(`/dashboard/strategies/${vaultStrategyId}`);
         }
       }
-    } catch (e) {
+    } catch {
       toast({
         description:
           "Failed to deploy strategy. Check your wallet and try again.",
