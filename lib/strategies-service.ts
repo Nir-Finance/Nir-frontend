@@ -58,27 +58,26 @@ export async function getAllStrategiesWithAi(): Promise<StrategyOverview[]> {
     })
   );
 
-  const names = onchain.map((s) => s.name);
+  const vaultIds = onchain.map((s) => s.id);
 
-  if (!names.length) return onchain;
+  if (!vaultIds.length) return onchain;
 
   const aiRows = await db
     .select()
     .from(strategies)
-    .where(inArray(strategies.name, names));
+    .where(inArray(strategies.vaultStrategyId, vaultIds));
 
-  const byName = new Map<string, (typeof aiRows)[number]>();
+  const byVaultId = new Map<number, (typeof aiRows)[number]>();
 
   for (const row of aiRows) {
-    const key = row.name;
-    const existing = byName.get(key);
-    if (!existing) {
-      byName.set(key, row);
+    if (row.vaultStrategyId == null) continue;
+    if (!byVaultId.has(row.vaultStrategyId)) {
+      byVaultId.set(row.vaultStrategyId, row);
     }
   }
 
   return onchain.map((s) => {
-    const meta = byName.get(s.name);
+    const meta = byVaultId.get(s.id);
     return {
       ...s,
       ai: meta
@@ -189,7 +188,7 @@ export async function getStrategyDetail(id: number): Promise<StrategyDetail | nu
   const rows = await db
     .select()
     .from(strategies)
-    .where(eq(strategies.name, base.name))
+    .where(eq(strategies.vaultStrategyId, id))
     .limit(1);
 
   const row = rows[0];

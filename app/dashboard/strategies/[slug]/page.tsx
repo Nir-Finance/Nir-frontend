@@ -4,7 +4,7 @@ import { ArrowLeft } from "lucide-react";
 import Image from "next/image";
 
 import StrategyCard from "@/components/dashboard/StrategyCard";
-import { Button } from "@/components/ui/button";
+import { ExecuteStrategyButton } from "@/components/dashboard/ExecuteStrategyButton";
 import {
   getAllStrategiesWithAi,
   getStrategyDetail,
@@ -151,12 +151,10 @@ export default async function StrategyDetailPage({
                 </div>
               </div>
 
-              <Button
-                variant="outline"
-                className="bg-[#1FE9F7] text-[#090909] px-6 sm:px-12 py-4 sm:py-5 rounded-md border-none outline-none hover:bg-[#1FE9F7]/80 cursor-pointer text-sm sm:text-base w-full sm:w-auto"
-              >
-                Join Strategy
-              </Button>
+              <ExecuteStrategyButton
+                strategyId={overview.id}
+                inputToken={overview.inputToken}
+              />
             </div>
           </div>
 

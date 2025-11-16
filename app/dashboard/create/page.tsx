@@ -1,7 +1,8 @@
 "use client";
 
 import { useState } from "react";
-import { useAccount, useWriteContract } from "wagmi";
+import { decodeEventLog } from "viem";
+import { useAccount, usePublicClient, useWriteContract } from "wagmi";
 
 import ProgressSteps from "@/components/dashboard/ProgressSteps";
 import { Button } from "@/components/ui/button";
@@ -17,11 +18,13 @@ const STEPS = [
 ];
 
 export default function CreateStrategyPage() {
-  const { isConnected } = useAccount();
+  const { address, isConnected } = useAccount();
   const { writeContractAsync, isPending } = useWriteContract();
+  const publicClient = usePublicClient();
 
   const [prompt, setPrompt] = useState("");
   const [aiStrategy, setAiStrategy] = useState<StrategyFromAi | null>(null);
+  const [dbStrategyId, setDbStrategyId] = useState<number | null>(null);
   const [generating, setGenerating] = useState(false);
   const [deploying, setDeploying] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -34,6 +37,7 @@ export default function CreateStrategyPage() {
     setGenerating(true);
     setError(null);
     setAiStrategy(null);
+    setDbStrategyId(null);
 
     try {
       const res = await fetch("/api/ai/strategy", {
@@ -46,9 +50,12 @@ export default function CreateStrategyPage() {
         const data = await res.json().catch(() => null);
         throw new Error(data?.error ?? "Failed to generate strategy");
       }
-
-      const data = (await res.json()) as { strategy: StrategyFromAi };
+      const data = (await res.json()) as {
+        id: number | null;
+        strategy: StrategyFromAi;
+      };
       setAiStrategy(data.strategy);
+      setDbStrategyId(data.id ?? null);
     } catch (e) {
       setError(e instanceof Error ? e.message : "Unexpected error");
     } finally {
@@ -59,6 +66,11 @@ export default function CreateStrategyPage() {
   const handleDeploy = async () => {
     if (!aiStrategy) return;
 
+    if (dbStrategyId == null) {
+      setError("Missing strategy reference. Regenerate and try again.");
+      return;
+    }
+
     const tokenKey = aiStrategy.inputToken as TokenKey;
     const token = TOKENS[tokenKey];
 
@@ -67,7 +79,7 @@ export default function CreateStrategyPage() {
       return;
     }
 
-    if (!isConnected) {
+    if (!isConnected || !address) {
       setError("Connect your wallet on BNB testnet to deploy the strategy.");
       return;
     }
@@ -78,12 +90,56 @@ export default function CreateStrategyPage() {
     try {
       const steps = buildStepsFromAi(aiStrategy);
 
-      await writeContractAsync({
+      const hash = await writeContractAsync({
         abi: nirContracts.strategyVault.abi,
         address: nirContracts.strategyVault.address,
         functionName: "createStrategy",
         args: [aiStrategy.name, token.address, steps],
       });
+
+      if (publicClient) {
+        const receipt = await publicClient.waitForTransactionReceipt({ hash });
+
+        let vaultStrategyId: number | null = null;
+
+        for (const log of receipt.logs) {
+          if (
+            log.address.toLowerCase() !==
+            nirContracts.strategyVault.address.toLowerCase()
+          ) {
+            continue;
+          }
+
+          try {
+            const decoded = decodeEventLog({
+              abi: nirContracts.strategyVault.abi,
+              data: log.data,
+              topics: log.topics,
+            });
+
+            if (decoded.eventName === "StrategyCreated") {
+              const id = decoded.args?.[0];
+              if (id != null) {
+                vaultStrategyId = Number(id);
+                break;
+              }
+            }
+          } catch {
+            // ignore non-matching logs
+          }
+        }
+
+        if (vaultStrategyId != null) {
+          await fetch("/api/strategies/link-vault-id", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              strategyId: dbStrategyId,
+              vaultStrategyId,
+            }),
+          });
+        }
+      }
     } catch (e) {
       setError("Failed to deploy strategy. Check your wallet and try again.");
     } finally {
