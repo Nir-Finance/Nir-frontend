@@ -66,7 +66,7 @@ export default function Home() {
                   href="/dashboard"
                   className="rounded-full border border-[#1FE9F759] bg-[#050607] px-6 sm:px-7 py-3 text-sm sm:text-base font-medium text-[#1FE9F7] shadow-[inset_0_0_14px_rgba(31,233,247,0.14)] transition hover:text-[#68f5ff]"
                 >
-                  Open App
+                  Launch Dapp
                 </a>
                 <a
                   href="/dashboard/learn"
