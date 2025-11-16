@@ -1,5 +1,5 @@
-import deployed from "../contract/deployed-addresses.json";
-import StrategyVaultAbi from "../contract/abis/StrategyVault.json";
+import deployed from "./contracts/deployed-addresses.json";
+import StrategyVaultAbi from "./contracts/abis/StrategyVault.json";
 
 type DeployedFileShape = {
   contracts: {
