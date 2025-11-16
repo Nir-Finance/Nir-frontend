@@ -3,17 +3,8 @@
 
 import Link from "next/link";
 import { ChartImage } from "./ChartImage";
+import type { StrategyCardProps } from "@/lib/strategy-types";
 import { riskColor } from "@/utils/utils";
-
-export interface StrategyCardProps {
-  title: string;
-  type: string;
-  creator: string;
-  description: string;
-  performance: string;
-  risk: string;
-  href?: string;
-}
 
 const StrategyCard = ({
   title,

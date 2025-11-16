@@ -3,10 +3,17 @@ import Image from "next/image";
 
 import TimeRangeToggle from "@/components/dashboard/TimeRangeToggle";
 import StrategyCard from "@/components/dashboard/StrategyCard";
-import { STRATEGIES } from "@/lib/data/strategies";
+import {
+  getAllStrategiesWithAi,
+  toStrategyCardProps,
+} from "@/lib/strategies-service";
 
-export default function DashboardHomePage() {
-  const featured = STRATEGIES[0];
+export default async function DashboardHomePage() {
+  const all = await getAllStrategiesWithAi();
+  const cards = await Promise.all(all.map(toStrategyCardProps));
+
+  const featured = cards[0] ?? null;
+  const others = cards.slice(1);
 
   return (
     <div className="flex min-h-screen flex-col">
@@ -43,7 +50,7 @@ export default function DashboardHomePage() {
 
               <div className="w-full sm:w-auto order-2 md:order-1">
                 <h1 className="text-[24px] sm:text-[28px] lg:text-[32px] font-semibold tracking-[0.01em] text-[#F2F4F5]">
-                  {featured?.title}
+                  {featured?.title ?? "No strategies yet"}
                 </h1>
                 <div className="flex items-center gap-2 w-fit text-[11px] sm:text-[12px] rounded-full bg-[#EDFCFE0F] px-3 sm:px-4 py-1 border border-[#EDFCFE0F] mt-2">
                   <h1>Creator:</h1>
@@ -54,7 +61,9 @@ export default function DashboardHomePage() {
                     height={18}
                     className="w-4 h-4 sm:w-5 sm:h-5"
                   />
-                  <span className="text-[#5efbff]">{featured?.creator}</span>
+                  {featured && (
+                    <span className="text-[#5efbff]">{featured.creator}</span>
+                  )}
                 </div>
               </div>
 
@@ -74,7 +83,7 @@ export default function DashboardHomePage() {
                     </span>
                   </div>
                   <h2 className="text-[11px] sm:text-[12px] font-semibold tracking-[0.01em] text-[#F2F4F5]">
-                    {featured?.type}
+                    {featured?.type ?? ""}
                   </h2>
                 </div>
 
@@ -93,7 +102,7 @@ export default function DashboardHomePage() {
                     </span>
                   </div>
                   <h2 className="text-[11px] sm:text-[12px] font-semibold tracking-[0.01em] text-[#FCD34D]">
-                    {featured?.risk}
+                    {featured?.risk ?? ""}
                   </h2>
                 </div>
 
@@ -111,9 +120,11 @@ export default function DashboardHomePage() {
                       Performance
                     </span>
                   </div>
-                  <h2 className="text-[11px] sm:text-[12px] font-semibold tracking-[0.01em] text-[#46FFD7]">
-                    {featured?.performance}
-                  </h2>
+                  {featured && (
+                    <h2 className="text-[11px] sm:text-[12px] font-semibold tracking-[0.01em] text-[#46FFD7]">
+                      {featured.performance}
+                    </h2>
+                  )}
                 </div>
               </div>
             </div>
@@ -143,9 +154,19 @@ export default function DashboardHomePage() {
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6 w-full">
-            {STRATEGIES.map((strategy) => (
-              <StrategyCard key={strategy.title} {...strategy} />
-            ))}
+            {cards.length === 0 ? (
+              <p className="text-[13px] sm:text-[14px] text-[#ADBEBF] col-span-full">
+                No strategies have been created yet. Use the Create page to let
+                Nir build one from your prompt.
+              </p>
+            ) : (
+              (others.length > 0 ? others : cards).map((strategy) => (
+                <StrategyCard
+                  key={`${strategy.title}-${strategy.href}`}
+                  {...strategy}
+                />
+              ))
+            )}
           </div>
         </section>
       </main>

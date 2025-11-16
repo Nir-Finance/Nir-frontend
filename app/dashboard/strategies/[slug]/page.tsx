@@ -4,9 +4,12 @@ import { ArrowLeft } from "lucide-react";
 import Image from "next/image";
 
 import StrategyCard from "@/components/dashboard/StrategyCard";
-import { STRATEGIES, getStrategyBySlug } from "@/lib/data/strategies";
-import { Button } from "@/components/ui/button";
-import { riskColor } from "@/utils/utils";
+import { ExecuteStrategyButton } from "@/components/dashboard/ExecuteStrategyButton";
+import {
+  getAllStrategiesWithAi,
+  getStrategyDetail,
+  toStrategyCardProps,
+} from "@/lib/strategies-service";
 
 interface StrategyPageProps {
   params: Promise<{ slug: string }>;
@@ -16,15 +19,38 @@ export default async function StrategyDetailPage({
   params,
 }: StrategyPageProps) {
   const { slug } = await params;
-  const strategy = getStrategyBySlug(slug);
 
-  if (!strategy) {
+  const id = Number(slug);
+
+  if (!Number.isFinite(id)) {
     notFound();
   }
 
-  const relatedStrategies = STRATEGIES.filter(
-    (item) => item.slug !== strategy.slug
-  ).slice(0, 3);
+  const detail = await getStrategyDetail(id);
+
+  if (!detail) {
+    notFound();
+  }
+
+  const overview = detail.overview;
+  const ai = detail.ai;
+
+  const all = await getAllStrategiesWithAi();
+  const relatedCards = await Promise.all(
+    all
+      .filter((s) => s.id !== overview.id && s.ai)
+      .slice(0, 3)
+      .map(toStrategyCardProps)
+  );
+
+  const creatorShort = `${overview.curator.slice(0, 6)}...${overview.curator.slice(-4)}`;
+  const type = ai ? "AI Strategy" : "On-chain Strategy";
+  const risk = ai?.riskLevel
+    ? ai.riskLevel.charAt(0).toUpperCase() + ai.riskLevel.slice(1)
+    : "Unknown";
+  const description =
+    ai?.summary || ai?.description ||
+    "On-chain strategy created in the Nir vault.";
 
   return (
     <div className="flex min-h-screen flex-col">
@@ -46,7 +72,7 @@ export default async function StrategyDetailPage({
 
               <div className="flex flex-col gap-1 flex-1 sm:flex-initial">
                 <h1 className="text-[24px] sm:text-[28px] lg:text-[32px] font-semibold tracking-[0.01em] text-[#F2F4F5] leading-tight">
-                  {strategy?.title}
+                  {overview.name}
                 </h1>
 
                 <div className="flex items-center gap-2 w-fit text-[11px] sm:text-[12px] rounded-full bg-[#EDFCFE0F] px-3 sm:px-4 py-1 border border-[#EDFCFE0F] mt-1">
@@ -59,7 +85,7 @@ export default async function StrategyDetailPage({
                     className="rounded-full w-4 h-4 sm:w-[18px] sm:h-[18px]"
                   />
                   <span className="text-[#5efbff] font-medium">
-                    {strategy?.creator}
+                    {creatorShort}
                   </span>
                 </div>
               </div>
@@ -82,7 +108,7 @@ export default async function StrategyDetailPage({
                     </span>
                   </div>
                   <h2 className="text-[11px] sm:text-[12px] font-semibold tracking-[0.01em] text-[#F2F4F5]">
-                    {strategy?.type}
+                    {type}
                   </h2>
                 </div>
 
@@ -100,12 +126,8 @@ export default async function StrategyDetailPage({
                       Risk
                     </span>
                   </div>
-                  <h2
-                    className={`text-[11px] sm:text-[12px] font-semibold tracking-[0.01em] ${riskColor(
-                      strategy.risk
-                    )}`}
-                  >
-                    {strategy?.risk}
+                  <h2 className="text-[11px] sm:text-[12px] font-semibold tracking-[0.01em] text-[#FCD34D]">
+                    {risk}
                   </h2>
                 </div>
 
@@ -124,17 +146,15 @@ export default async function StrategyDetailPage({
                     </span>
                   </div>
                   <h2 className="text-[11px] sm:text-[12px] font-semibold tracking-[0.01em] text-[#46FFD7]">
-                    {strategy?.performance}
+                    N/A
                   </h2>
                 </div>
               </div>
 
-              <Button
-                variant="outline"
-                className="bg-[#1FE9F7] text-[#090909] px-6 sm:px-12 py-4 sm:py-5 rounded-md border-none outline-none hover:bg-[#1FE9F7]/80 cursor-pointer text-sm sm:text-base w-full sm:w-auto"
-              >
-                Join Strategy
-              </Button>
+              <ExecuteStrategyButton
+                strategyId={overview.id}
+                inputToken={overview.inputToken}
+              />
             </div>
           </div>
 
@@ -155,7 +175,7 @@ export default async function StrategyDetailPage({
                 Description
               </p>
               <p className="text-[14px] sm:text-[16px] leading-6 sm:leading-7 text-[#F2F4F5]">
-                {strategy.summary}
+                {description}
               </p>
             </div>
 
@@ -166,14 +186,23 @@ export default async function StrategyDetailPage({
                 Steps
               </p>
               <ol className="space-y-1 text-[14px] sm:text-[16px] leading-6 sm:leading-7 text-[#F2F4F5]">
-                {strategy.steps.map((step, index) => (
-                  <li key={`${strategy.slug}-stacked-step-${index}`}>
-                    <span className="text-[#F2F4F5] ml-2 sm:ml-3">
-                      {index + 1}.
-                    </span>{" "}
-                    {step}
+                {ai?.steps && ai.steps.length > 0 ? (
+                  ai.steps.map((step, index) => (
+                    <li key={`${overview.id}-ai-step-${index}`}>
+                      <span className="text-[#F2F4F5] ml-2 sm:ml-3">
+                        {index + 1}.
+                      </span>{" "}
+                      <span className="uppercase text-[11px] tracking-[0.16em] text-[#5efbff] mr-2">
+                        {step.action}
+                      </span>
+                      {step.label ?? "Generated step"}
+                    </li>
+                  ))
+                ) : (
+                  <li className="text-[13px] sm:text-[14px] text-[#ADBEBF]">
+                    No AI step metadata stored for this strategy.
                   </li>
-                ))}
+                )}
               </ol>
             </div>
           </div>
@@ -192,8 +221,11 @@ export default async function StrategyDetailPage({
           </div>
 
           <div className="grid grid-cols-1 gap-6 sm:gap-8 md:grid-cols-2 lg:grid-cols-3">
-            {relatedStrategies.map((related) => (
-              <StrategyCard key={related.slug} {...related} />
+            {relatedCards.map((related) => (
+              <StrategyCard
+                key={`${related.title}-${related.href}`}
+                {...related}
+              />
             ))}
           </div>
         </section>
