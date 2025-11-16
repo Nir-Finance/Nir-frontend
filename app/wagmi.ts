@@ -17,18 +17,16 @@ import {
 
 export const config = getDefaultConfig({
   appName: "Nir Finance",
-  projectId: "YOUR_PROJECT_ID",
+  projectId: process.env.NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID!,
   chains: [
     mainnet,
     polygon,
     sepolia,
     bsc,
     optimism,
-    opBNB,
     base,
     bscTestnet,
     arbitrum,
-    opBNBTestnet,
     baseSepolia,
     ...(process.env.NEXT_PUBLIC_ENABLE_TESTNETS === "true" ? [sepolia] : []),
   ],
